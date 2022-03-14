@@ -19,7 +19,7 @@ OpenHABのインストール方法は、本ドキュメントと同じプロジ�
 また、VSCodeで作業を行う場合、拡張機能のOpenHABを入れることを推奨する。
 
 # Thingsファイル
-Thingsファイルでは、「**何**で繋がった**何**」をOpenHABに接続するかを定義する。OpenHABに機器を追加するときには、常にThingsファイルの記述から始める。  
+Thingsファイルでは、「**何**で繋がった**どのモノ**」をOpenHABに接続するかを定義する。OpenHABに機器を追加するときには、常にThingsファイルの記述から始める。モノはバインディングを通じてopenHABに接続されるため、追加するモノをつなげるバインディングの選択が必要となる。  
 
 温湿度計の室温データは、ESPを介してローカルのMQTTブローカにサブスクライブされているため、「**MQTTブローカ**で繋がった**温湿度計の室温データ**」を追加することになる。 
 
@@ -43,6 +43,31 @@ username="admin", password="admin"] {
 
 次に、扱うデータを定義する。データを定義する際には`Thing`をつける。  
 `Thing`の次の3つの記述で、**デバイス**の**室温データ**と分かるようにラベルを付けている。: `topic Meter1_Temp_Status_device "Meter1_Temp_Status_device"`  
-次の波括弧で囲まれた場所で扱うデータの詳細を定義している。扱うデータの詳細は**チャンネル**という単位で管理を行う。扱うデータの詳細を定義する際には、`Channels:`を最初につける。  
-次の記述で、扱うデータがどういったデータなのかを管理する。上の例では、**デバイス**の**室温データ**と分かるようにラベルを付け、そのトピックを`"haudi/hc1.0/ul3fqMC4uNtvOOjGP5WCcw/temphumid/h1_r1_meter1/status"`指定している。# haudiプロトコルに準拠  
+次の波括弧で囲まれた場所で扱うデータの詳細を定義している。扱うデータの詳細は**チャンネル**という単位で管理を行う。扱うデータの詳細を定義する際には、`Channels:`を最初につける。チャンネルは、後述の**Items**とThingをつなげる役割を果たし、ItemsとThingsで相互にデータを渡すことが可能となる。  
+次の記述で、扱うデータがどういったデータなのかを管理する。上の例では、**デバイス**の**室温データ**と分かるようにラベルを付け、そのトピックを`"haudi/hc1.0/ul3fqMC4uNtvOOjGP5WCcw/temphumid/h1_r1_meter1/status"`指定している。# **haudiプロトコルに準拠**  
 最後の`transformationPattern="JSONPATH:$.temp"`という記述によって、取得されたJSONデータから、温度データのみを引き抜いている。
+
+# Itemsファイル
+Itemsファイルでは、Thingsファイルで用意した、データのために受け皿の役割となるItemsを定義する。Itemsには状態があり、後述ruleやWebAppを通じて使用される。  
+
+ファイルでは、以下のような単純な記述になる。  
+
+```
+String Meter1_Temp_Status_device {channel="mqtt:topic:broker:Meter1_Temp_Status_device:Meter1_Temp_Status_device"}
+```
+
+# Rulesファイル
+Rulesファイルでは、その名の通りルールとしてある条件で一連のコマンドが実行される。例として、温湿度計の温度が変化した場合に、前述のItemの値をその時の値に動的に変化させるといったことが可能となる。  
+
+
+これをファイルで記述すると以下のようになる。
+```
+rule "HumidSensor_OHtoUI"
+when
+    Item Meter1_Humid_Status_device changed
+then
+    var time = new DateTimeType().format("%1$tY-%1$tm-%1$tdT%1$tT%1tZ")
+    Meter1_Humid_Command_ui.sendCommand('{"text":'+ Meter1_Humid_Status_device.state + ',"ts":"' + time + '"}')
+end
+```
+Itemとして、温湿度計の温度が変化した場合に、５行目以降のコマンドが実行され、タイムスタンプとともにデータが送られるようになっている。
