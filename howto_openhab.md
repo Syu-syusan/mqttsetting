@@ -11,7 +11,7 @@ OpenHABの設定ファイルの記述方法を本ドキュメントで示す。L
 例として、SESAMEスマートロックから取得できるデータをOpenHABでどう管理し、操作していくかを定義するファイルの記述方法を示す。  
 GLC用に用意したシステム構成図を以下に示す。以後の説明は以下の図をもとにしている。  
 
-![haudi-ページ1のコピー](https://user-images.githubusercontent.com/74150680/158243840-25faf139-c9f7-43d3-b002-a3fca38e8427.jpg)
+![openhab_last](https://user-images.githubusercontent.com/74150680/158628185-0ce57fe3-fd43-4b76-a3cb-3836e57577bb.jpg)
 
 # 環境構築
 OpenHABのインストール方法は、本ドキュメントと同じプロジェクト配下にある`reTerminal_setup.md` を別途参照。  
